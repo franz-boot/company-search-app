@@ -262,7 +262,23 @@ export async function POST(request: Request) {
         }
 
         const ldItems = await searchFirmy(location);
-        const results: Company[] = ldItems.map(mapFirmyLd);
+
+        // Normalize searched city (first token before comma, lowercase, no diacritics)
+        const normalize = (s: string) =>
+            s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(',')[0].trim();
+
+        const searchCity = normalize(location);
+
+        // Keep only companies whose recorded city matches the searched city.
+        // This filters out sponsored/promoted listings from unrelated locations
+        // (e.g. Praha results appearing in a Brno search).
+        const results: Company[] = ldItems
+            .map(mapFirmyLd)
+            .filter(c => {
+                if (!c.location.city) return false;
+                const city = normalize(c.location.city);
+                return city.startsWith(searchCity) || searchCity.startsWith(city);
+            });
 
         // Sort by sector priority, then alphabetically by name
         results.sort((a, b) => {
