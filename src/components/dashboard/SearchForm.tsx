@@ -107,8 +107,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         setParams({ keyword: "", location: "", employeeCount: "", sector: "" });
     };
 
-    const hasFilters =
-        params.location || params.employeeCount || params.sector;
+    const hasFilters = params.location || params.sector;
 
     return (
         <form
@@ -164,8 +163,8 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                         </p>
                     </div>
 
-                    {/* Počet zaměstnanců */}
-                    <div>
+                    {/* Počet zaměstnanců — ARES data neposkytuje */}
+                    <div className="opacity-40 pointer-events-none select-none" title="ARES neposkytuje data o počtu zaměstnanců">
                         <FieldLabel htmlFor="search-employees">
                             Počet zaměstnanců
                         </FieldLabel>
@@ -174,24 +173,19 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                                 id="search-employees"
                                 name="employeeCount"
                                 className={selectClass}
-                                value={params.employeeCount}
-                                onChange={e =>
-                                    setParams({ ...params, employeeCount: e.target.value })
-                                }
-                                aria-label="Vyberte rozsah počtu zaměstnanců"
+                                disabled
+                                value=""
+                                onChange={() => {}}
+                                aria-label="Filtr počtu zaměstnanců není dostupný"
                             >
-                                {EMPLOYEE_COUNTS.map(opt => (
-                                    <option
-                                        key={opt.value}
-                                        value={opt.value}
-                                        className="bg-[#0d1226] text-slate-200"
-                                    >
-                                        {opt.label}
-                                        {opt.desc ? ` — ${opt.desc}` : ""}
-                                    </option>
-                                ))}
+                                <option value="" className="bg-[#0d1226] text-slate-200">
+                                    Nedostupné (ARES)
+                                </option>
                             </select>
                         </SelectWrapper>
+                        <p className="text-[11px] text-slate-600 mt-1.5 pl-0.5">
+                            Registr ARES tato data neposkytuje
+                        </p>
                     </div>
 
                     {/* Sektor */}

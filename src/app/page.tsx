@@ -13,10 +13,12 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const handleSearch = async (params: SearchParams) => {
     setIsLoading(true);
     setHasSearched(true);
+    setSearchError(null);
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -25,8 +27,10 @@ export default function Dashboard() {
       });
       const res = await response.json();
       setResults(res.data || []);
+      if (res.error) setSearchError(res.error);
     } catch (error) {
       console.error("Search failed", error);
+      setSearchError("Nepodařilo se připojit k serveru.");
     } finally {
       setIsLoading(false);
     }
@@ -148,6 +152,11 @@ export default function Dashboard() {
             style={{ animationDelay: "0.15s" }}
             aria-label="Výsledky vyhledávání"
           >
+            {searchError && (
+              <div className="mb-6 px-4 py-3 rounded-xl text-sm text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                {searchError}
+              </div>
+            )}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="h-5 w-1 rounded-full bg-gradient-to-b from-neon-cyan to-neon-purple" />
