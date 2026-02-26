@@ -4,8 +4,87 @@ import { useState } from "react";
 import { SearchParams, Sector } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Users, Briefcase } from "lucide-react";
+import { CityAutocomplete } from "@/components/ui/CityAutocomplete";
+import { Search, Users, Briefcase, Loader2 } from "lucide-react";
 
+// ─── Konfigurace ──────────────────────────────────────────────────────────────
+const SECTORS: { value: Sector | ""; label: string }[] = [
+    { value: "", label: "Všechny sektory" },
+    { value: "IT", label: "IT & Technologie" },
+    { value: "Finance", label: "Finance" },
+    { value: "Manufacturing", label: "Výroba" },
+    { value: "Healthcare", label: "Zdravotnictví" },
+    { value: "Retail", label: "Obchod" },
+    { value: "Other", label: "Ostatní" },
+];
+
+const EMPLOYEE_COUNTS: { value: string; label: string; desc: string }[] = [
+    { value: "", label: "Libovolný počet", desc: "" },
+    { value: "1-10", label: "1 – 10", desc: "mikro firma" },
+    { value: "11-50", label: "11 – 50", desc: "malá firma" },
+    { value: "50+", label: "50 a více", desc: "střední / velká firma" },
+];
+
+// ─── Sdílené styly ────────────────────────────────────────────────────────────
+const selectClass = [
+    "flex h-16 w-full rounded-xl pl-12 pr-10 py-2 text-sm text-slate-200",
+    "bg-[rgba(15,20,40,0.7)] backdrop-blur-sm",
+    "border border-[rgba(168,85,247,0.2)]",
+    "transition-all duration-200 appearance-none cursor-pointer",
+    "focus:outline-none focus:border-neon-purple focus:ring-2 focus:ring-neon-purple/20",
+    "disabled:opacity-40 disabled:cursor-not-allowed",
+].join(" ");
+
+// ─── Pomocné sub-komponenty ───────────────────────────────────────────────────
+function FieldLabel({
+    htmlFor,
+    children,
+}: {
+    htmlFor: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <label
+            htmlFor={htmlFor}
+            className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 pl-0.5 select-none"
+        >
+            {children}
+        </label>
+    );
+}
+
+function SelectWrapper({
+    icon,
+    children,
+}: {
+    icon: React.ReactNode;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="relative group h-16 flex items-center">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-neon-purple transition-colors duration-200 pointer-events-none z-10">
+                {icon}
+            </div>
+            {children}
+            {/* Custom chevron */}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                    <path
+                        d="M2 4L6 8L10 4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
+            </div>
+            {/* Focus underline */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px w-0 bg-gradient-to-r from-neon-purple to-neon-cyan group-focus-within:w-[90%] transition-all duration-300 rounded-full" />
+        </div>
+    );
+}
+
+// ─── Hlavní komponenta ────────────────────────────────────────────────────────
 interface SearchFormProps {
     onSearch: (params: SearchParams) => void;
     isLoading: boolean;
@@ -24,72 +103,163 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         onSearch(params);
     };
 
+    const handleReset = () => {
+        setParams({ keyword: "", location: "", employeeCount: "", sector: "" });
+    };
+
+    const hasFilters = params.location || params.sector;
+
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="col-span-1 md:col-span-4">
-                    <Input
-                        placeholder="Název firmy nebo IČO..."
-                        icon={<Search className="w-5 h-5" />}
-                        className="h-14 text-lg"
-                        value={params.keyword}
-                        onChange={e => setParams({ ...params, keyword: e.target.value })}
-                    />
-                </div>
+        <form
+            onSubmit={handleSubmit}
+            noValidate
+            aria-label="Formulář pro vyhledávání firem"
+        >
+            {/* ── Blok 1: Klíčové slovo ─────────────────────────────────────── */}
+            <fieldset className="border-none p-0 m-0 mb-10">
+                <legend className="sr-only">Hlavní vyhledávání</legend>
+                <FieldLabel htmlFor="search-keyword">
+                    Název firmy nebo IČO
+                </FieldLabel>
+                <Input
+                    id="search-keyword"
+                    name="keyword"
+                    type="search"
+                    placeholder="Zadejte název společnosti nebo IČO…"
+                    icon={<Search className="w-6 h-6" />}
+                    className="h-16 text-base pl-12"
+                    value={params.keyword}
+                    onChange={e => setParams({ ...params, keyword: e.target.value })}
+                    aria-label="Název firmy nebo IČO"
+                    autoFocus
+                    autoComplete="off"
+                />
+            </fieldset>
 
-                <div>
-                    <Input
-                        placeholder="Lokalita (např. Praha)"
-                        icon={<MapPin className="w-4 h-4" />}
-                        value={params.location}
-                        onChange={e => setParams({ ...params, location: e.target.value })}
-                    />
-                </div>
+            {/* ── Blok 2: Filtry ────────────────────────────────────────────── */}
+            <fieldset className="border-none p-0 m-0 mb-10">
+                <legend className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-8 w-full">
+                    <div className="flex-1 h-px bg-[rgba(168,85,247,0.15)]" />
+                    <span className="shrink-0 px-1">Upřesnit výsledky</span>
+                    <div className="flex-1 h-px bg-[rgba(168,85,247,0.15)]" />
+                </legend>
 
-                <div className="relative">
-                    <div className="absolute left-3 top-3 text-slate-400 z-10">
-                        <Users className="w-4 h-4" />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-8">
+
+                    {/* Lokalita */}
+                    <div>
+                        <FieldLabel htmlFor="search-location">
+                            Lokalita
+                        </FieldLabel>
+                        <CityAutocomplete
+                            id="search-location"
+                            value={params.location ?? ""}
+                            onChange={location => setParams({ ...params, location })}
+                            placeholder="Praha, Brno, Ostrava…"
+                        />
+                        <p className="text-[11px] text-slate-600 mt-1.5 pl-0.5">
+                            Zadejte město nebo použijte{" "}
+                            <span className="text-neon-cyan/60">GPS ikonu</span> vpravo
+                        </p>
                     </div>
-                    <select
-                        className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/50 pl-10 pr-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm transition-all appearance-none cursor-pointer text-slate-700 dark:text-slate-200 dark:bg-slate-950/50 dark:border-slate-800"
-                        value={params.employeeCount}
-                        onChange={e => setParams({ ...params, employeeCount: e.target.value })}
-                    >
-                        <option value="">Počet zaměstnanců...</option>
-                        <option value="1-10">1 - 10</option>
-                        <option value="11-50">11 - 50</option>
-                        <option value="50+">Více než 50</option>
-                    </select>
-                </div>
 
-                <div className="relative">
-                    <div className="absolute left-3 top-3 text-slate-400 z-10">
-                        <Briefcase className="w-4 h-4" />
+                    {/* Počet zaměstnanců — ARES data neposkytuje */}
+                    <div className="opacity-40 pointer-events-none select-none" title="ARES neposkytuje data o počtu zaměstnanců">
+                        <FieldLabel htmlFor="search-employees">
+                            Počet zaměstnanců
+                        </FieldLabel>
+                        <SelectWrapper icon={<Users className="w-4 h-4" />}>
+                            <select
+                                id="search-employees"
+                                name="employeeCount"
+                                className={selectClass}
+                                disabled
+                                value=""
+                                onChange={() => {}}
+                                aria-label="Filtr počtu zaměstnanců není dostupný"
+                            >
+                                <option value="" className="bg-[#0d1226] text-slate-200">
+                                    Nedostupné (ARES)
+                                </option>
+                            </select>
+                        </SelectWrapper>
+                        <p className="text-[11px] text-slate-600 mt-1.5 pl-0.5">
+                            Registr ARES tato data neposkytuje
+                        </p>
                     </div>
-                    <select
-                        className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/50 pl-10 pr-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm transition-all appearance-none cursor-pointer text-slate-700 dark:text-slate-200 dark:bg-slate-950/50 dark:border-slate-800"
-                        value={params.sector}
-                        onChange={e => setParams({ ...params, sector: e.target.value as Sector })}
-                    >
-                        <option value="">Sektor...</option>
-                        <option value="IT">IT & Technologie</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Manufacturing">Výroba</option>
-                        <option value="Healthcare">Zdravotnictví</option>
-                        <option value="Retail">Obchod</option>
-                        <option value="Other">Ostatní</option>
-                    </select>
+
+                    {/* Sektor */}
+                    <div>
+                        <FieldLabel htmlFor="search-sector">
+                            Sektor / odvětví
+                        </FieldLabel>
+                        <SelectWrapper icon={<Briefcase className="w-4 h-4" />}>
+                            <select
+                                id="search-sector"
+                                name="sector"
+                                className={selectClass}
+                                value={params.sector}
+                                onChange={e =>
+                                    setParams({
+                                        ...params,
+                                        sector: e.target.value as Sector | "",
+                                    })
+                                }
+                                aria-label="Vyberte sektor nebo odvětví"
+                            >
+                                {SECTORS.map(opt => (
+                                    <option
+                                        key={opt.value}
+                                        value={opt.value}
+                                        className="bg-[#0d1226] text-slate-200"
+                                    >
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </SelectWrapper>
+                    </div>
+                </div>
+            </fieldset>
+
+            {/* ── Blok 3: Akce ─────────────────────────────────────────────── */}
+            <div
+                className="flex flex-col sm:flex-row items-center justify-between gap-4"
+                role="group"
+                aria-label="Akce formuláře"
+            >
+                {/* Reset – zobrazíme jen pokud jsou nastaveny filtry */}
+                <div className="h-9">
+                    {hasFilters && (
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            className="text-xs text-slate-600 hover:text-slate-300 transition-colors duration-200 underline underline-offset-4 decoration-dotted"
+                            aria-label="Vymazat všechny filtry"
+                        >
+                            Vymazat filtry
+                        </button>
+                    )}
                 </div>
 
-                <div>
-                    <Button
-                        type="submit"
-                        className="w-full h-11"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? "Vyhledávám..." : "Hledat subjekty"}
-                    </Button>
-                </div>
+                <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full sm:w-auto min-w-[220px] h-14 text-base gap-3"
+                    aria-live="polite"
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" aria-hidden />
+                            <span>Vyhledávám…</span>
+                        </>
+                    ) : (
+                        <>
+                            <Search className="w-5 h-5" aria-hidden />
+                            <span>Hledat subjekty</span>
+                        </>
+                    )}
+                </Button>
             </div>
         </form>
     );
