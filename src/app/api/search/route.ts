@@ -130,49 +130,24 @@ const BROWSER_UA =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
     '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 
-async function searchFirmy(keyword: string, location: string): Promise<FirmyLd[]> {
-    const qs = new URLSearchParams();
-    if (keyword) qs.set('q', keyword);
-    if (location) qs.set('locality', location);
+const FIRMY_HEADERS = {
+    'User-Agent': BROWSER_UA,
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'cs-CZ,cs;q=0.9,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    Referer: 'https://www.firmy.cz/',
+};
 
-    const url = `https://www.firmy.cz/?${qs.toString()}`;
-
-    let res: Response;
-    try {
-        res = await fetchWithTimeout(url, {
-            headers: {
-                'User-Agent': BROWSER_UA,
-                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'cs-CZ,cs;q=0.9,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate, br',
-                Referer: 'https://www.firmy.cz/',
-            },
-        }, 12000);
-    } catch (err) {
-        console.error('firmy.cz fetch failed:', err);
-        return [];
-    }
-
-    if (!res.ok) {
-        console.error('firmy.cz HTTP error:', res.status);
-        return [];
-    }
-
-    const html = await res.text();
-
-    // Parse all <script type="application/ld+json"> blocks
+function parseLdItems(html: string): FirmyLd[] {
     const results: FirmyLd[] = [];
     const ldRe = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
     let match: RegExpExecArray | null;
-
     while ((match = ldRe.exec(html)) !== null) {
         try {
             const parsed = JSON.parse(match[1]) as Record<string, unknown>;
-            // Support both top-level object and @graph array
             const items: unknown[] = Array.isArray(parsed['@graph'])
                 ? (parsed['@graph'] as unknown[])
                 : [parsed];
-
             for (const item of items) {
                 const ld = item as FirmyLd;
                 if (ld['@type'] === 'LocalBusiness' || ld['@type'] === 'Organization') {
@@ -183,8 +158,58 @@ async function searchFirmy(keyword: string, location: string): Promise<FirmyLd[]
             // skip malformed JSON-LD blocks
         }
     }
-
     return results;
+}
+
+async function fetchFirmyPage(location: string, page: number): Promise<FirmyLd[]> {
+    // firmy.cz requires q= (even empty) for locality filter to work correctly
+    const qs = new URLSearchParams({ q: '', locality: location });
+    if (page > 1) qs.set('page', String(page));
+    const url = `https://www.firmy.cz/?${qs.toString()}`;
+
+    let res: Response;
+    try {
+        res = await fetchWithTimeout(url, { headers: FIRMY_HEADERS }, 13000);
+    } catch (err) {
+        console.error(`firmy.cz page ${page} fetch failed:`, err);
+        return [];
+    }
+    if (!res.ok) {
+        console.error(`firmy.cz page ${page} HTTP error:`, res.status);
+        return [];
+    }
+    return parseLdItems(await res.text());
+}
+
+/** Fetch at least `targetCount` unique LocalBusiness items for a locality. */
+async function searchFirmy(location: string, targetCount = 25): Promise<FirmyLd[]> {
+    const seen = new Set<string>();
+    const all: FirmyLd[] = [];
+
+    const addItems = (items: FirmyLd[]) => {
+        for (const item of items) {
+            const key = item.name ?? item.url ?? '';
+            if (key && !seen.has(key)) {
+                seen.add(key);
+                all.push(item);
+            }
+        }
+    };
+
+    // Fetch pages 1 & 2 in parallel for speed
+    const [p1, p2] = await Promise.all([
+        fetchFirmyPage(location, 1),
+        fetchFirmyPage(location, 2),
+    ]);
+    addItems(p1);
+    addItems(p2);
+
+    // If still under target, fetch page 3
+    if (all.length < targetCount) {
+        addItems(await fetchFirmyPage(location, 3));
+    }
+
+    return all;
 }
 
 // ─── Map JSON-LD → Company ────────────────────────────────────────────────────
@@ -220,32 +245,26 @@ function mapFirmyLd(ld: FirmyLd): Company {
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 
+const SECTOR_ORDER: Record<string, number> = {
+    IT: 0, Finance: 1, Healthcare: 2, Manufacturing: 3, Retail: 4, Other: 5,
+};
+
 export async function POST(request: Request) {
     try {
         const body: SearchParams = await request.json();
-
-        const keyword = body.keyword?.trim() ?? '';
         const location = body.location?.trim() ?? '';
 
-        if (!keyword && !location) {
+        if (!location) {
             return NextResponse.json({
                 data: [],
-                error: 'Zadejte název firmy nebo lokalitu pro vyhledávání.',
+                error: 'Zadejte lokalitu pro vyhledávání.',
             });
         }
 
-        const ldItems = await searchFirmy(keyword, location);
-        let results: Company[] = ldItems.map(mapFirmyLd);
-
-        // Apply sector filter if requested
-        if (body.sector) {
-            results = results.filter(c => c.sector === body.sector);
-        }
+        const ldItems = await searchFirmy(location);
+        const results: Company[] = ldItems.map(mapFirmyLd);
 
         // Sort by sector priority, then alphabetically by name
-        const SECTOR_ORDER: Record<string, number> = {
-            IT: 0, Finance: 1, Healthcare: 2, Manufacturing: 3, Retail: 4, Other: 5,
-        };
         results.sort((a, b) => {
             const sd = (SECTOR_ORDER[a.sector] ?? 5) - (SECTOR_ORDER[b.sector] ?? 5);
             return sd !== 0 ? sd : a.name.localeCompare(b.name, 'cs');
