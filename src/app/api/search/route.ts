@@ -124,19 +124,9 @@ function extractCity(addressLocality?: string): string {
     return addressLocality.split(',')[0].trim();
 }
 
-// ─── firmy.cz scraper ─────────────────────────────────────────────────────────
+// ─── ScrapFly scraper ─────────────────────────────────────────────────────────
 
-const BROWSER_UA =
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-    '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
-
-const FIRMY_HEADERS = {
-    'User-Agent': BROWSER_UA,
-    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Language': 'cs-CZ,cs;q=0.9,en;q=0.5',
-    'Accept-Encoding': 'gzip, deflate, br',
-    Referer: 'https://www.firmy.cz/',
-};
+const SCRAPFLY_KEY = process.env.SCRAPFLY_API_KEY ?? '';
 
 function parseLdItems(html: string): FirmyLd[] {
     const results: FirmyLd[] = [];
@@ -161,24 +151,39 @@ function parseLdItems(html: string): FirmyLd[] {
     return results;
 }
 
+interface ScrapflyResult {
+    result?: { content?: string; status_code?: number };
+}
+
 async function fetchFirmyPage(location: string, page: number): Promise<FirmyLd[]> {
     // firmy.cz requires q= (even empty) for locality filter to work correctly
     const qs = new URLSearchParams({ q: '', locality: location });
     if (page > 1) qs.set('page', String(page));
-    const url = `https://www.firmy.cz/?${qs.toString()}`;
+    const targetUrl = `https://www.firmy.cz/?${qs.toString()}`;
+
+    // Route through ScrapFly to bypass firmy.cz bot protection
+    const apiUrl = 'https://api.scrapfly.io/scrape?' + new URLSearchParams({
+        key: SCRAPFLY_KEY,
+        url: targetUrl,
+        country: 'cz',
+        render_js: 'false',
+    }).toString();
 
     let res: Response;
     try {
-        res = await fetchWithTimeout(url, { headers: FIRMY_HEADERS }, 13000);
+        res = await fetchWithTimeout(apiUrl, {}, 15000);
     } catch (err) {
-        console.error(`firmy.cz page ${page} fetch failed:`, err);
+        console.error(`ScrapFly page ${page} fetch failed:`, err);
         return [];
     }
     if (!res.ok) {
-        console.error(`firmy.cz page ${page} HTTP error:`, res.status);
+        console.error(`ScrapFly page ${page} HTTP error:`, res.status);
         return [];
     }
-    return parseLdItems(await res.text());
+
+    const json = await res.json() as ScrapflyResult;
+    const html = json.result?.content ?? '';
+    return parseLdItems(html);
 }
 
 /** Fetch at least `targetCount` unique LocalBusiness items for a locality. */
