@@ -124,11 +124,6 @@ function extractCity(addressLocality?: string): string {
     return addressLocality.split(',')[0].trim();
 }
 
-/** LinkedIn company search URL */
-function linkedInUrl(companyName: string): string {
-    return `https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(companyName)}`;
-}
-
 // ─── firmy.cz scraper ─────────────────────────────────────────────────────────
 
 const BROWSER_UA =
@@ -219,9 +214,7 @@ function mapFirmyLd(ld: FirmyLd): Company {
             phone: ld.telephone ?? '',
             website: extractWebsite(ld.sameAs),
         },
-        socialLinks: {
-            linkedin: linkedInUrl(name),
-        },
+        socialLinks: {},
     };
 }
 
@@ -248,6 +241,15 @@ export async function POST(request: Request) {
         if (body.sector) {
             results = results.filter(c => c.sector === body.sector);
         }
+
+        // Sort by sector priority, then alphabetically by name
+        const SECTOR_ORDER: Record<string, number> = {
+            IT: 0, Finance: 1, Healthcare: 2, Manufacturing: 3, Retail: 4, Other: 5,
+        };
+        results.sort((a, b) => {
+            const sd = (SECTOR_ORDER[a.sector] ?? 5) - (SECTOR_ORDER[b.sector] ?? 5);
+            return sd !== 0 ? sd : a.name.localeCompare(b.name, 'cs');
+        });
 
         return NextResponse.json({ data: results });
     } catch (error) {

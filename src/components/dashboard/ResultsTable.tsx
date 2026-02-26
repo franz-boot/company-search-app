@@ -19,14 +19,6 @@ const SECTOR_COLORS: Record<string, string> = {
     Other: "text-slate-400 bg-slate-400/10 border-slate-400/30",
 };
 
-function LinkedInIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-        </svg>
-    );
-}
-
 /** Strip protocol + www for display */
 function displayUrl(url: string): string {
     return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
@@ -66,7 +58,6 @@ export function ResultsTable({ data, isLoading, onEdit }: ResultsTableProps) {
             {data.map((company, i) => {
                 const sectorColor = SECTOR_COLORS[company.sector] ?? SECTOR_COLORS.Other;
                 const hasWebsite = Boolean(company.contact.website);
-                const hasLinkedIn = Boolean(company.socialLinks.linkedin);
 
                 return (
                     <div
@@ -132,23 +123,6 @@ export function ResultsTable({ data, isLoading, onEdit }: ResultsTableProps) {
                                     )}
                                 </div>
 
-                                {/* LinkedIn */}
-                                <div className="flex items-center gap-3 text-sm">
-                                    <LinkedInIcon className="w-4 h-4 shrink-0 text-slate-600" />
-                                    {hasLinkedIn ? (
-                                        <a
-                                            href={company.socialLinks.linkedin}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400/80 hover:text-blue-400 truncate transition-colors"
-                                        >
-                                            Hledat na LinkedIn
-                                        </a>
-                                    ) : (
-                                        <span className="text-slate-700 italic text-xs">není k dispozici</span>
-                                    )}
-                                </div>
-
                                 {/* Email — only shown if filled */}
                                 {company.contact.email && (
                                     <div className="flex items-center gap-3 text-sm">
@@ -184,17 +158,6 @@ export function ResultsTable({ data, isLoading, onEdit }: ResultsTableProps) {
                                             className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all duration-200"
                                         >
                                             <ExternalLink className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                    {hasLinkedIn && (
-                                        <a
-                                            href={company.socialLinks.linkedin}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            title="Hledat na LinkedIn"
-                                            className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 transition-all duration-200"
-                                        >
-                                            <LinkedInIcon className="w-4 h-4" />
                                         </a>
                                     )}
                                 </div>
