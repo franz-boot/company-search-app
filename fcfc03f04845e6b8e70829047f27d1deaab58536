@@ -1,0 +1,31 @@
+src/components/ui/button.tsx
+  4b27b14448194e46 38-43
+src/app/api/geocode/route.ts
+  4b27b14448194e46 1-53
+src/app/page.tsx
+  4b27b14448194e46 11-24,66-73
+src/components/ui/CityAutocomplete.tsx
+  4b27b14448194e46 156-157,159
+src/app/api/search/route.ts
+  4b27b14448194e46 7-15,170,193
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "fcfc03f04845e6b8e70829047f27d1deaab58536",
+  "prompts": {
+    "4b27b14448194e46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e49697be-7b05-4cc1-837b-4451c00c74d1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "franz-boot <122613922+franz-boot@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 95,
+      "total_deletions": 9,
+      "accepted_lines": 95,
+      "overriden_lines": 0
+    }
+  }
+}
