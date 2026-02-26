@@ -153,9 +153,10 @@ export function CityAutocomplete({
         navigator.geolocation.getCurrentPosition(
             async ({ coords }) => {
                 try {
+                    // Proxy through our own API route so the User-Agent header
+                    // can be set server-side (browsers silently ignore / reject it).
                     const res = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json&accept-language=cs`,
-                        { headers: { "User-Agent": "company-search-app/1.0" } }
+                        `/api/geocode?lat=${coords.latitude}&lon=${coords.longitude}`
                     );
                     const data = await res.json();
                     const city =

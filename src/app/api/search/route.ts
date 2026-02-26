@@ -4,6 +4,15 @@ import { Company, SearchParams, Sector } from '@/types';
 const ARES_BASE = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest';
 const KURZY_BASE = 'https://rejstrik-firem.kurzy.cz';
 
+// ─── Shared fetch helper ──────────────────────────────────────────────────────
+
+/** fetch() with an AbortController-based timeout. Cleans up the timer on completion. */
+function fetchWithTimeout(url: string, options: RequestInit = {}, ms = 8000): Promise<Response> {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(tid));
+}
+
 // ─── NACE → Sector ──────────────────────────────────────────────────────────
 
 function naceToSector(naceCodes: string[]): Sector {
@@ -158,7 +167,7 @@ export async function POST(request: Request) {
 
         // Direct ICO lookup
         if (body.keyword && /^\d{8}$/.test(body.keyword.trim())) {
-            const res = await fetch(`${ARES_BASE}/ekonomicke-subjekty/${body.keyword.trim()}`, {
+            const res = await fetchWithTimeout(`${ARES_BASE}/ekonomicke-subjekty/${body.keyword.trim()}`, {
                 headers: { Accept: 'application/json' },
             });
             if (!res.ok) return NextResponse.json({ data: [] });
@@ -181,7 +190,7 @@ export async function POST(request: Request) {
         const filter: Record<string, unknown> = { start: 0, pocet: 20, obchodniJmeno: body.keyword };
         if (body.location) filter.nazevObce = body.location;
 
-        const res = await fetch(`${ARES_BASE}/ekonomicke-subjekty/vyhledat`, {
+        const res = await fetchWithTimeout(`${ARES_BASE}/ekonomicke-subjekty/vyhledat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify(filter),

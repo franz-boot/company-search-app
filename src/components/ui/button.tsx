@@ -35,7 +35,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         );
 
         if (asChild && React.isValidElement(children)) {
-            return React.cloneElement(children as React.ReactElement<{ className?: string }>, {
+            // Spread all button props (onClick, type, disabled, aria-*, data-*, …) into the
+            // child element so that asChild doesn't silently swallow non-className props.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return React.cloneElement(children as React.ReactElement<any>, {
+                ...props,
+                ref,
                 className: cn(buttonClass, (children as React.ReactElement<{ className?: string }>).props.className),
             });
         }

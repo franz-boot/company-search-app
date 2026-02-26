@@ -8,6 +8,20 @@ import { Company, SearchParams } from "@/types";
 import { Building2, FileSpreadsheet, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// ─── CSV helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Wraps a value in double-quotes for CSV, escaping any embedded double-quotes
+ * by doubling them (RFC 4180) and prepending a single-quote to values that
+ * would otherwise be interpreted as spreadsheet formulas (=, +, -, @, tab, CR).
+ */
+function csvCell(value: string): string {
+    const sanitized = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+    return `"${sanitized.replace(/"/g, '""')}"`;
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+
 export default function Dashboard() {
   const [results, setResults] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,10 +63,14 @@ export default function Dashboard() {
     const csvContent = [
       headers.join(","),
       ...results.map(c => [
-        `"${c.name}"`, `"${c.ico}"`,
-        `"${c.location.city}, ${c.location.street}"`,
-        `"${c.employeeCount}"`, `"${c.sector}"`,
-        `"${c.contact.email}"`, `"${c.contact.phone}"`, `"${c.contact.website}"`
+        csvCell(c.name),
+        csvCell(c.ico),
+        csvCell(`${c.location.city}, ${c.location.street}`),
+        csvCell(c.employeeCount),
+        csvCell(c.sector),
+        csvCell(c.contact.email),
+        csvCell(c.contact.phone),
+        csvCell(c.contact.website),
       ].join(","))
     ].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
