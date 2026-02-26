@@ -1,0 +1,29 @@
+src/components/dashboard/SearchForm.tsx
+  7be7b636287a8956 110,166-167,176-179,181-182,186-188
+src/components/dashboard/ResultsTable.tsx
+  7be7b636287a8956 4,22-34,68-70,82,108,112-113,116-126,128-132,134-135,137-138,140-149,151-171,176-178,183,189-197,201
+src/app/page.tsx
+  7be7b636287a8956 16,21,30,33,155-159
+src/app/api/search/route.ts
+  7be7b636287a8956 2-5,7-33,35,37-46,48-60,62-69,71-72,74-130,132-153,159-166,168-171,173-174,177-178,180-188,190-192,195-197,199-203,208-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "e53950c50237546f654e78b00fe52158c735c720",
+  "prompts": {
+    "7be7b636287a8956": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c4856e89-555b-4a7a-990c-7420176dbbe4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "franz-boot <122613922+franz-boot@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 424,
+      "total_deletions": 234,
+      "accepted_lines": 298,
+      "overriden_lines": 0
+    }
+  }
+}
