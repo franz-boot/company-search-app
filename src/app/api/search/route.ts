@@ -269,15 +269,15 @@ export async function POST(request: Request) {
 
         const searchCity = normalize(location);
 
-        // Keep only companies whose recorded city matches the searched city.
-        // This filters out sponsored/promoted listings from unrelated locations
-        // (e.g. Praha results appearing in a Brno search).
+        // Keep only companies whose recorded city plausibly matches the searched city.
+        // Fail-open: if no city data is recorded, keep the listing (can't verify).
+        // Use includes() to handle "Praha 1", "Praha 5", "Brno-střed", etc.
         const results: Company[] = ldItems
             .map(mapFirmyLd)
             .filter(c => {
-                if (!c.location.city) return false;
+                if (!c.location.city) return true;          // no address data → keep
                 const city = normalize(c.location.city);
-                return city.startsWith(searchCity) || searchCity.startsWith(city);
+                return city.includes(searchCity) || searchCity.includes(city);
             });
 
         // Sort by sector priority, then alphabetically by name
