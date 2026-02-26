@@ -5,16 +5,18 @@ import { SearchForm } from "@/components/dashboard/SearchForm";
 import { ResultsTable } from "@/components/dashboard/ResultsTable";
 import { CompanyEditorPanel } from "@/components/dashboard/CompanyEditorPanel";
 import { Company, SearchParams } from "@/types";
-import { Building2, FileSpreadsheet } from "lucide-react";
+import { Building2, FileSpreadsheet, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const [results, setResults] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async (params: SearchParams) => {
     setIsLoading(true);
+    setHasSearched(true);
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -38,7 +40,6 @@ export default function Dashboard() {
   };
 
   const handleExport = () => {
-    // Basic CSV export simulation for now
     if (results.length === 0) return;
 
     const headers = ["Název", "IČO", "Lokalita", "Zaměstnanci", "Sektor", "Email", "Telefon", "Web"];
@@ -67,54 +68,98 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 md:p-10 font-sans">
+    <div className="min-h-screen p-4 md:p-8 lg:p-12">
       <div className="max-w-7xl mx-auto space-y-8">
 
-        {/* Header Section */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-              <div className="p-2 bg-brand-100 dark:bg-brand-900/30 rounded-xl">
-                <Building2 className="w-8 h-8 text-brand-600 dark:text-brand-400" />
-              </div>
-              Vyhledávač Subjektů
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">
-              Najděte, upravte a exportujte firemní kontakty.
-            </p>
+        {/* ── HEADER ── */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in">
+          <div className="flex items-center gap-4">
+            {/* Logo icon */}
+            <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-neon-purple to-neon-cyan shadow-neon-md shrink-0">
+              <Building2 className="w-7 h-7 text-white" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-neon-purple to-neon-cyan opacity-30 blur-xl" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                <span className="neon-text">Vyhledávač</span>{" "}
+                <span className="text-white">Subjektů</span>
+              </h1>
+              <p className="text-slate-500 text-sm mt-0.5 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-neon-purple/60" />
+                Business intelligence na dosah ruky
+              </p>
+            </div>
           </div>
+
           <Button
             onClick={handleExport}
             disabled={results.length === 0}
-            className="flex items-center gap-2"
+            variant="outline"
+            className="flex items-center gap-2.5 shrink-0"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            Export do Sheets / CSV
+            Export CSV
+            {results.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-neon-purple/20 text-neon-purple font-semibold border border-neon-purple/30">
+                {results.length}
+              </span>
+            )}
           </Button>
         </header>
 
-        {/* Search Panel */}
-        <section className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-white/20 dark:border-slate-700/50 shadow-xl rounded-2xl p-6">
+        {/* ── SEARCH PANEL ── */}
+        <section
+          className="glass-card shadow-glass p-6 md:p-8 animate-fade-in"
+          style={{ animationDelay: "0.1s" }}
+        >
+          {/* Panel header */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-4 w-1 rounded-full bg-gradient-to-b from-neon-purple to-neon-cyan" />
+            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-widest">
+              Parametry vyhledávání
+            </h2>
+          </div>
           <SearchForm onSearch={handleSearch} isLoading={isLoading} />
         </section>
 
-        {/* Results Section */}
-        <section className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-white/20 dark:border-slate-700/50 shadow-xl rounded-2xl p-6 min-h-[400px]">
-          <ResultsTable
-            data={results}
-            isLoading={isLoading}
-            onEdit={setSelectedCompany}
-          />
-        </section>
-
-        {/* Editor Sidebar/Modal */}
-        <CompanyEditorPanel
-          company={selectedCompany}
-          onClose={() => setSelectedCompany(null)}
-          onSave={handleSaveCompany}
-        />
+        {/* ── RESULTS ── */}
+        {(hasSearched || results.length > 0) && (
+          <section
+            className="glass-card shadow-glass p-6 md:p-8 animate-slide-up min-h-[300px]"
+            style={{ animationDelay: "0.15s" }}
+          >
+            {/* Panel header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 rounded-full bg-gradient-to-b from-neon-cyan to-neon-purple" />
+                <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-widest">
+                  Výsledky
+                </h2>
+              </div>
+              {results.length > 0 && (
+                <span className="text-xs text-slate-500">
+                  Nalezeno{" "}
+                  <span className="font-semibold text-neon-cyan">{results.length}</span>{" "}
+                  {results.length === 1 ? "subjekt" : results.length < 5 ? "subjekty" : "subjektů"}
+                </span>
+              )}
+            </div>
+            <ResultsTable
+              data={results}
+              isLoading={isLoading}
+              onEdit={setSelectedCompany}
+            />
+          </section>
+        )}
 
       </div>
+
+      {/* ── EDITOR PANEL ── */}
+      <CompanyEditorPanel
+        company={selectedCompany}
+        onClose={() => setSelectedCompany(null)}
+        onSave={handleSaveCompany}
+      />
     </div>
   );
 }
