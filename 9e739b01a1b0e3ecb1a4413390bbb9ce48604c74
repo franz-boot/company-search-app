@@ -1,0 +1,25 @@
+src/components/dashboard/SearchForm.tsx
+  4b27b14448194e46 128,133,166-167,187
+src/app/api/search/route.ts
+  4b27b14448194e46 6,12-14,16-20,24-27,29,31-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "9e739b01a1b0e3ecb1a4413390bbb9ce48604c74",
+  "prompts": {
+    "4b27b14448194e46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e49697be-7b05-4cc1-837b-4451c00c74d1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "franz-boot <122613922+franz-boot@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 34,
+      "total_deletions": 217,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    }
+  }
+}
