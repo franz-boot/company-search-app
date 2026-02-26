@@ -119,18 +119,18 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             <fieldset className="border-none p-0 m-0 mb-10">
                 <legend className="sr-only">Hlavní vyhledávání</legend>
                 <FieldLabel htmlFor="search-keyword">
-                    Název firmy nebo IČO
+                    Název firmy
                 </FieldLabel>
                 <Input
                     id="search-keyword"
                     name="keyword"
                     type="search"
-                    placeholder="Zadejte název společnosti nebo IČO…"
+                    placeholder="Zadejte název společnosti…"
                     icon={<Search className="w-6 h-6" />}
                     className="h-16 text-base pl-12"
                     value={params.keyword}
                     onChange={e => setParams({ ...params, keyword: e.target.value })}
-                    aria-label="Název firmy nebo IČO"
+                    aria-label="Název firmy"
                     autoFocus
                     autoComplete="off"
                 />
@@ -163,8 +163,8 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                         </p>
                     </div>
 
-                    {/* Počet zaměstnanců — ARES data neposkytuje */}
-                    <div className="opacity-40 pointer-events-none select-none" title="ARES neposkytuje data o počtu zaměstnanců">
+                    {/* Počet zaměstnanců — data nejsou k dispozici */}
+                    <div className="opacity-40 pointer-events-none select-none" title="Data o počtu zaměstnanců nejsou k dispozici">
                         <FieldLabel htmlFor="search-employees">
                             Počet zaměstnanců
                         </FieldLabel>
@@ -179,12 +179,12 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                                 aria-label="Filtr počtu zaměstnanců není dostupný"
                             >
                                 <option value="" className="bg-[#0d1226] text-slate-200">
-                                    Nedostupné (ARES)
+                                    Nedostupné
                                 </option>
                             </select>
                         </SelectWrapper>
                         <p className="text-[11px] text-slate-600 mt-1.5 pl-0.5">
-                            Registr ARES tato data neposkytuje
+                            Tato data nejsou k dispozici
                         </p>
                     </div>
 
