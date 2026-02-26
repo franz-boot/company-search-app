@@ -1,0 +1,23 @@
+src/app/api/search/route.ts
+  4b27b14448194e46 272-274,278,280
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "17f3a83d3f5115c6b8a6df9315926b00ceca1a3d",
+  "prompts": {
+    "4b27b14448194e46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e49697be-7b05-4cc1-837b-4451c00c74d1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "franz-boot <122613922+franz-boot@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 5,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}
