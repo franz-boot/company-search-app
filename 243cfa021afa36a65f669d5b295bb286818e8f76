@@ -1,0 +1,35 @@
+src/types/index.ts
+  4b27b14448194e46 2,31
+src/components/dashboard/SearchForm.tsx
+  4b27b14448194e46 4,7,9-42,51-52,56,59-61,64,70,72,74-75,77-92,94-99,102-148,155,160,169,181
+src/app/page.tsx
+  4b27b14448194e46 8,31,61-84,113,116,137-147,151,160-161,172,174-177,179,183,186,188,205,239-249
+src/components/ui/CityAutocomplete.tsx
+  4b27b14448194e46 218,222,227,230-238,240-249,252-254,256,258
+.claude/launch.json
+  4b27b14448194e46 6-7,12-13
+src/components/dashboard/ResultsTable.tsx
+  4b27b14448194e46 4,85-91,93-94,96-102,105,179-189
+src/app/api/search/route.ts
+  4b27b14448194e46 2,12-84,158-159,169-171,190-194,197-214,216,219-222,224,226,238,332,334-335,342,345,362-363
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "243cfa021afa36a65f669d5b295bb286818e8f76",
+  "prompts": {
+    "4b27b14448194e46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e49697be-7b05-4cc1-837b-4451c00c74d1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "franz-boot <122613922+franz-boot@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 434,
+      "total_deletions": 448,
+      "accepted_lines": 368,
+      "overriden_lines": 0
+    }
+  }
+}
