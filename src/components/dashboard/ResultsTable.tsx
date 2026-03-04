@@ -1,7 +1,7 @@
 "use client";
 
 import { Company } from "@/types";
-import { Building2, Mail, Phone, ExternalLink, Edit2, MapPin, Globe } from "lucide-react";
+import { Building2, Mail, Phone, ExternalLink, Edit2, MapPin, Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ResultsTableProps {
@@ -82,11 +82,27 @@ export function ResultsTable({ data, isLoading, onEdit }: ResultsTableProps) {
                             {/* Header */}
                             <div className="flex justify-between items-start mb-4 gap-3">
                                 <div className="min-w-0">
-                                    <h3 className="font-bold text-base text-white leading-snug line-clamp-2 group-hover:text-neon-purple transition-colors duration-200" title={company.name}>
-                                        {company.name}
-                                    </h3>
+                                    <a
+                                        href={`https://www.google.com/search?q=${encodeURIComponent('"' + company.name + '"')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={`Vyhledat „${company.name}" v Google`}
+                                    >
+                                        <h3 className="font-bold text-base text-white leading-snug line-clamp-2 group-hover:text-neon-purple hover:text-neon-purple transition-colors duration-200">
+                                            {company.name}
+                                        </h3>
+                                    </a>
                                     <p className="text-xs text-slate-600 font-mono mt-1.5 tracking-wider">
-                                        IČO: <span className="text-slate-400">{company.ico}</span>
+                                        IČO:{" "}
+                                        <a
+                                            href={`https://www.google.com/search?q=${encodeURIComponent(company.ico)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title={`Vyhledat IČO ${company.ico} v Google`}
+                                            className="text-slate-400 hover:text-neon-cyan transition-colors"
+                                        >
+                                            {company.ico}
+                                        </a>
                                     </p>
                                 </div>
                                 <span className={`inline-flex shrink-0 items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${sectorColor}`}>
@@ -158,6 +174,17 @@ export function ResultsTable({ data, isLoading, onEdit }: ResultsTableProps) {
                                             className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all duration-200"
                                         >
                                             <ExternalLink className="w-4 h-4" />
+                                        </a>
+                                    )}
+                                    {company.socialLinks?.linkedin && (
+                                        <a
+                                            href={company.socialLinks.linkedin}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title="Hledat na LinkedIn"
+                                            className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-[#0A66C2] hover:bg-[#0A66C2]/10 transition-all duration-200"
+                                        >
+                                            <Linkedin className="w-4 h-4" />
                                         </a>
                                     )}
                                 </div>

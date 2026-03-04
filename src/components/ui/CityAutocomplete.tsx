@@ -195,11 +195,6 @@ export function CityAutocomplete({
     return (
         <div className="flex flex-col gap-1.5 w-full">
             <div ref={containerRef} className="relative w-full group">
-                {/* Map pin icon */}
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-neon-purple transition-colors duration-200 z-10 pointer-events-none">
-                    <MapPin className="w-4 h-4" />
-                </div>
-
                 {/* Text input */}
                 <input
                     ref={inputRef}
@@ -220,47 +215,47 @@ export function CityAutocomplete({
                     }}
                     onKeyDown={handleKeyDown}
                     className={cn(
-                        "flex h-16 w-full rounded-xl pl-12 pr-20 py-2 text-sm text-slate-200 transition-all duration-200",
+                        "flex h-20 w-full rounded-2xl pl-[4.5rem] pr-10 text-[32px] text-slate-200 transition-all duration-200",
                         "bg-[rgba(15,20,40,0.7)] backdrop-blur-sm",
                         "border border-[rgba(168,85,247,0.2)]",
                         "placeholder:text-slate-600",
-                        "focus:outline-none focus:border-neon-purple focus:ring-2 focus:ring-neon-purple/20 focus:shadow-neon-sm",
+                        "focus:outline-none focus:border-neon-purple focus:ring-4 focus:ring-neon-purple/15 focus:shadow-[0_0_24px_rgba(168,85,247,0.15)]",
                         className
                     )}
                 />
 
-                {/* Right icons: clear + geolocate */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {value && (
-                        <button
-                            type="button"
-                            aria-label="Vymazat hodnotu"
-                            onClick={() => { onChange(""); setSuggestions([]); setOpen(false); inputRef.current?.focus(); }}
-                            className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-300 hover:bg-white/5 transition-all"
-                        >
-                            <X className="w-3.5 h-3.5" />
-                        </button>
+                {/* Left: Locate / loading */}
+                <button
+                    type="button"
+                    aria-label="Použít aktuální polohu"
+                    title="Určit polohu automaticky"
+                    onClick={handleGeolocate}
+                    disabled={geoState === "loading"}
+                    className={cn(
+                        "absolute left-4 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded-xl transition-all",
+                        geoState === "loading"
+                            ? "text-neon-cyan opacity-70 cursor-wait"
+                            : "text-slate-500 hover:text-neon-cyan hover:bg-neon-cyan/10"
                     )}
+                >
+                    {geoState === "loading" ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                        <Locate className="w-5 h-5" />
+                    )}
+                </button>
+
+                {/* Right: clear */}
+                {value && (
                     <button
                         type="button"
-                        aria-label="Použít aktuální polohu"
-                        title="Určit polohu automaticky"
-                        onClick={handleGeolocate}
-                        disabled={geoState === "loading"}
-                        className={cn(
-                            "h-7 w-7 flex items-center justify-center rounded-lg transition-all",
-                            geoState === "loading"
-                                ? "text-neon-cyan opacity-70 cursor-wait"
-                                : "text-slate-500 hover:text-neon-cyan hover:bg-neon-cyan/10"
-                        )}
+                        aria-label="Vymazat hodnotu"
+                        onClick={() => { onChange(""); setSuggestions([]); setOpen(false); inputRef.current?.focus(); }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded-xl text-slate-600 hover:text-slate-300 hover:bg-white/5 transition-all"
                     >
-                        {geoState === "loading" ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Locate className="w-4 h-4" />
-                        )}
+                        <X className="w-4 h-4" />
                     </button>
-                </div>
+                )}
 
                 {/* Focus gradient underline */}
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px w-0 bg-gradient-to-r from-neon-purple to-neon-cyan group-focus-within:w-[90%] transition-all duration-300 rounded-full" />

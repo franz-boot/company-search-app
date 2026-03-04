@@ -5,7 +5,7 @@ import { SearchForm } from "@/components/dashboard/SearchForm";
 import { ResultsTable } from "@/components/dashboard/ResultsTable";
 import { CompanyEditorPanel } from "@/components/dashboard/CompanyEditorPanel";
 import { Company, SearchParams } from "@/types";
-import { Building2, FileSpreadsheet, Sparkles } from "lucide-react";
+import { Building2, FileSpreadsheet, Sheet, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ─── CSV helpers ─────────────────────────────────────────────────────────────
@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [gsheetsToast, setGsheetsToast] = useState(false);
 
   const handleSearch = async (params: SearchParams) => {
     setIsLoading(true);
@@ -55,6 +56,30 @@ export default function Dashboard() {
       current.map(c => c.id === updatedCompany.id ? updatedCompany : c)
     );
     setSelectedCompany(null);
+  };
+
+  const handleExportSheets = async () => {
+    if (results.length === 0) return;
+    const headers = ["Název", "IČO", "Lokalita", "Zaměstnanci", "Sektor", "Email", "Telefon", "Web"];
+    const rows = results.map(c => [
+      c.name,
+      c.ico,
+      `${c.location.city}, ${c.location.street}`,
+      c.employeeCount,
+      c.sector,
+      c.contact.email,
+      c.contact.phone,
+      c.contact.website,
+    ]);
+    const tsv = [headers, ...rows].map(row => row.join("\t")).join("\n");
+    try {
+      await navigator.clipboard.writeText(tsv);
+    } catch {
+      // fallback: skip clipboard silently
+    }
+    window.open("https://sheets.new", "_blank");
+    setGsheetsToast(true);
+    setTimeout(() => setGsheetsToast(false), 6000);
   };
 
   const handleExport = () => {
@@ -85,10 +110,10 @@ export default function Dashboard() {
 
   return (
     /* Outer wrapper — full min-height, vzdušný padding */
-    <div className="min-h-screen px-4 py-10 md:py-16 lg:py-20">
+    <div className="min-h-screen px-4 sm:px-8 md:px-12 py-24 md:py-36 lg:py-48">
 
       {/* ── Hlavní oblast — max-width pro obsah ── */}
-      <div className="max-w-6xl mx-auto flex flex-col gap-10">
+      <div className="max-w-6xl mx-auto flex flex-col gap-12">
 
         {/* ── HEADER ── */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in px-1">
@@ -109,20 +134,31 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <Button
-            onClick={handleExport}
-            disabled={results.length === 0}
-            variant="outline"
-            className="flex items-center gap-2.5 shrink-0"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            Export CSV
-            {results.length > 0 && (
-              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-neon-purple/20 text-neon-purple font-semibold border border-neon-purple/30">
-                {results.length}
-              </span>
-            )}
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={handleExportSheets}
+              disabled={results.length === 0}
+              variant="outline"
+              className="flex items-center gap-2.5"
+            >
+              <Sheet className="w-4 h-4" />
+              Google Sheets
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={results.length === 0}
+              variant="outline"
+              className="flex items-center gap-2.5"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              CSV
+              {results.length > 0 && (
+                <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-neon-purple/20 text-neon-purple font-semibold border border-neon-purple/30">
+                  {results.length}
+                </span>
+              )}
+            </Button>
+          </div>
         </header>
 
         {/* ── SEARCH TILE — centrovaná dlaždice ── */}
@@ -133,23 +169,23 @@ export default function Dashboard() {
         >
           {/* Centrovaná dlaždice s max-width a auto marginy */}
           <div
-            className="mx-auto w-full max-w-3xl rounded-3xl shadow-glass"
+            className="mx-auto w-full max-w-4xl rounded-[36px] shadow-glass"
             style={{
-              background: "rgba(12, 16, 34, 0.75)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid rgba(168, 85, 247, 0.22)",
+              background: "rgba(12, 16, 34, 0.82)",
+              backdropFilter: "blur(40px)",
+              WebkitBackdropFilter: "blur(40px)",
+              border: "1px solid rgba(168, 85, 247, 0.25)",
               boxShadow:
-                "0 0 0 1px rgba(168,85,247,0.08) inset, 0 24px 64px rgba(0,0,0,0.5), 0 0 80px rgba(168,85,247,0.06)",
+                "0 0 0 1px rgba(168,85,247,0.10) inset, 0 32px 96px rgba(0,0,0,0.6), 0 0 120px rgba(168,85,247,0.10), 0 2px 4px rgba(0,0,0,0.3)",
             }}
           >
             {/* Neon top bar */}
-            <div className="h-px w-full rounded-t-3xl bg-gradient-to-r from-transparent via-neon-purple/60 to-transparent" />
+            <div className="h-px w-full rounded-t-[36px] bg-gradient-to-r from-transparent via-neon-purple/60 to-transparent" />
 
             {/* Dlaždice obsah — velký padding */}
-            <div className="px-8 py-10 md:px-12 md:py-12">
+            <div className="px-10 py-20 sm:px-16 sm:py-28 md:px-20 md:py-32">
               {/* Dlaždice header */}
-              <div className="flex items-center gap-3 mb-10">
+              <div className="flex items-center gap-3 mb-10 sm:mb-12 md:mb-14">
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-1 rounded-full bg-gradient-to-b from-neon-purple to-neon-cyan" />
                   <h2 className="text-base font-semibold text-slate-200 tracking-wide">
@@ -166,7 +202,7 @@ export default function Dashboard() {
         {/* ── RESULTS ── */}
         {(hasSearched || results.length > 0) && (
           <section
-            className="glass-card shadow-glass p-6 md:p-10 animate-slide-up min-h-[300px]"
+            className="glass-card shadow-glass p-8 md:p-12 animate-slide-up min-h-[300px]"
             style={{ animationDelay: "0.15s" }}
             aria-label="Výsledky vyhledávání"
           >
@@ -199,6 +235,17 @@ export default function Dashboard() {
         )}
 
       </div>
+
+      {/* ── GOOGLE SHEETS TOAST ── */}
+      {gsheetsToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-medium text-emerald-300 bg-[rgba(10,30,20,0.92)] border border-emerald-500/30 shadow-[0_0_32px_rgba(16,185,129,0.2)] backdrop-blur-md animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          Data zkopírována do schránky — v Google Sheets stiskněte{" "}
+          <kbd className="ml-0.5 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 text-xs font-mono border border-emerald-500/30">
+            Ctrl+V
+          </kbd>
+        </div>
+      )}
 
       {/* ── EDITOR PANEL ── */}
       <CompanyEditorPanel

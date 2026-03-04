@@ -1,4 +1,5 @@
 export type Sector = "IT" | "Finance" | "Manufacturing" | "Retail" | "Healthcare" | "Other";
+export type EntityType = "company" | "sports_club" | "association" | "union";
 
 export interface Company {
     id: string;
@@ -27,4 +28,5 @@ export interface SearchParams {
     employeeCount?: string;
     sector?: Sector | "";
     keyword?: string;
+    entityType?: EntityType;
 }
